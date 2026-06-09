@@ -1,0 +1,831 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Estimate Landed Cost · Zakk API Guide</title>
+<meta name="description" content="An interactive, step-by-step guide to the Zakk Estimate Landed Cost endpoint — authenticate, compose a request, make the call, and read the response." />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%230B593C'/%3E%3Ctext x='16' y='23' font-family='Arial,sans-serif' font-size='20' font-weight='bold' fill='white' text-anchor='middle'%3EZ%3C/text%3E%3C/svg%3E" />
+<style>
+  /* ----------------------------------------------------------------
+     Zakk API Docs — Estimate Landed Cost
+     Pure HTML + inline CSS/JS. No build step, no dependencies.
+     Brand tokens lifted from Zakk.Client/src/globals.css.
+  ---------------------------------------------------------------- */
+  :root {
+    --green:        #0B593C;
+    --green-dark:   #084530;
+    --green-deep:   #0a2e22;
+    --leaf:         #2f9e46;
+    --bg:           #fbfbfd;
+    --cream:        #f5f6f8;   /* subtle neutral fill */
+    --ink:          #1a2733;
+    --ink-soft:     #51606e;
+    --ink-faint:    #8793a1;
+    --line:         #ecedf1;
+    --line-strong:  #e0e2e9;
+    --white:        #ffffff;
+    --code-bg:      #0b1f18;
+    --code-ink:     #e8f3ea;
+    --amber:        #9a6a14;
+    --amber-bg:     #fdf8ee;
+    --amber-line:   #f0e2c2;
+    --radius:       12px;
+    --radius-sm:    8px;
+    --shadow-sm:    0 1px 1px rgba(16,42,67,.04), 0 1px 2px rgba(16,42,67,.05);
+    --shadow-md:    0 4px 16px -6px rgba(16,42,67,.12), 0 1px 3px rgba(16,42,67,.05);
+    --shadow-lg:    0 18px 48px -16px rgba(16,42,67,.20);
+    --sans: system-ui, -apple-system, "Segoe UI", Calibri, "Helvetica Neue", Arial, sans-serif;
+    --mono: "SF Mono", "JetBrains Mono", "Fira Code", ui-monospace, Menlo, Consolas, monospace;
+  }
+
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; scroll-padding-top: 88px; }
+  body {
+    margin: 0;
+    font-family: var(--sans);
+    color: var(--ink);
+    background: var(--bg);
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+  a { color: var(--green); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  h1, h2, h3 { line-height: 1.2; letter-spacing: -0.02em; margin: 0; }
+  ::selection { background: rgba(47,158,70,.28); }
+
+  /* ---------- Top bar ---------- */
+  .topbar {
+    position: sticky; top: 0; z-index: 50;
+    display: flex; align-items: center; gap: 14px;
+    padding: 12px clamp(16px, 4vw, 40px);
+    background: rgba(251,251,253,.78);
+    backdrop-filter: saturate(140%) blur(14px);
+    -webkit-backdrop-filter: saturate(140%) blur(14px);
+    border-bottom: 1px solid var(--line);
+  }
+  .brand { display: flex; align-items: center; gap: 11px; font-weight: 700; letter-spacing: -.02em; color: var(--green-dark); }
+  .brand .mark {
+    width: 30px; height: 30px; border-radius: 9px; flex: none;
+    background: linear-gradient(150deg, var(--leaf), var(--green) 70%);
+    display: grid; place-items: center; color: #fff; font-weight: 800; font-size: 16px;
+    box-shadow: var(--shadow-sm), inset 0 1px 0 rgba(255,255,255,.25);
+  }
+  .brand small { display:block; font-weight: 500; font-size: 11.5px; color: var(--ink-faint); letter-spacing: .04em; text-transform: uppercase; }
+  .topbar .spacer { flex: 1; }
+  .pill {
+    display: inline-flex; align-items: center; gap: 8px;
+    font-family: var(--mono); font-size: 12.5px; font-weight: 600;
+    padding: 6px 12px; border-radius: 999px;
+    background: var(--white); border: 1px solid var(--line-strong); color: var(--green-dark);
+    box-shadow: var(--shadow-sm);
+  }
+  .verb { color: var(--leaf); font-weight: 800; }
+  @media (max-width: 720px){ .topbar .pill .path { display:none; } }
+
+  /* ---------- Layout ---------- */
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 0 clamp(16px, 4vw, 40px); }
+  .shell { display: grid; grid-template-columns: 244px 1fr; gap: 44px; align-items: start; padding-bottom: 120px; }
+  @media (max-width: 960px){ .shell { grid-template-columns: 1fr; } .sidenav { display: none; } }
+
+  /* ---------- Hero ---------- */
+  .hero { padding: clamp(44px, 8vw, 88px) 0 32px; }
+  .hero h1 { font-size: clamp(34px, 5.4vw, 54px); font-weight: 800; color: var(--green-deep); max-width: 16ch; letter-spacing: -.03em; }
+  .hero p.lede { font-size: clamp(16px, 2vw, 19px); color: var(--ink-soft); max-width: 58ch; margin-top: 20px; }
+
+  /* ---------- Sidebar nav ---------- */
+  .sidenav { position: sticky; top: 84px; }
+  .sidenav .label { font-size: 11.5px; font-weight: 700; letter-spacing: .09em; text-transform: uppercase; color: var(--ink-faint); padding: 0 14px 12px; }
+  .sidenav ol { list-style: none; margin: 0; padding: 0; position: relative; }
+  .sidenav ol::before { content:""; position:absolute; left: 27px; top: 16px; bottom: 16px; width: 2px; background: var(--line); border-radius: 2px; }
+  .sidenav li { position: relative; }
+  .sidenav a {
+    display: flex; align-items: center; gap: 13px; padding: 9px 14px; border-radius: 10px;
+    color: var(--ink-soft); font-weight: 600; font-size: 14.5px; position: relative; transition: background .15s, color .15s;
+  }
+  .sidenav a:hover { background: rgba(11,89,60,.06); text-decoration: none; }
+  .sidenav a .num {
+    width: 28px; height: 28px; border-radius: 50%; flex: none; display: grid; place-items: center;
+    background: var(--white); border: 2px solid var(--line-strong); color: var(--ink-faint);
+    font-size: 13px; font-weight: 700; z-index: 1; transition: all .2s;
+  }
+  .sidenav a.active { color: var(--green-deep); }
+  .sidenav a.active .num { background: var(--green); border-color: var(--green); color: #fff; box-shadow: 0 0 0 5px rgba(47,158,70,.16); }
+  .sidenav a.done .num { background: var(--leaf); border-color: var(--leaf); color: #fff; }
+
+  /* ---------- Sections ---------- */
+  section.step { padding: 30px 0; scroll-margin-top: 84px; border-top: 1px solid var(--line); }
+  section.step:first-of-type { border-top: none; }
+  .step-head { display: flex; align-items: baseline; gap: 16px; margin-bottom: 8px; }
+  .step-head .badge {
+    flex: none; font-family: var(--mono); font-size: 13px; font-weight: 700; color: var(--green);
+    background: rgba(47,158,70,.12); border-radius: 8px; padding: 3px 10px; transform: translateY(-3px);
+  }
+  .step-head h2 { font-size: clamp(22px, 3vw, 28px); font-weight: 800; color: var(--green-deep); }
+  .step > p { color: var(--ink-soft); max-width: 68ch; }
+
+  /* ---------- Cards ---------- */
+  .card { background: var(--white); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow-sm); overflow: clip; margin-top: 20px; }
+  .card-pad { padding: clamp(18px, 3vw, 26px); }
+
+  /* ---------- Code blocks ---------- */
+  .codewrap { position: relative; background: var(--code-bg); border-radius: var(--radius); overflow: clip; box-shadow: var(--shadow-md); }
+  .codewrap .bar {
+    display: flex; align-items: center; gap: 8px; padding: 11px 14px;
+    background: rgba(255,255,255,.04); border-bottom: 1px solid rgba(255,255,255,.07);
+  }
+  .codewrap .bar .lights { display: flex; gap: 6px; }
+  .codewrap .bar .lights i { width: 11px; height: 11px; border-radius: 50%; display:block; }
+  .codewrap .bar .lights i:nth-child(1){ background:#ff5f57; } .codewrap .bar .lights i:nth-child(2){ background:#febc2e; } .codewrap .bar .lights i:nth-child(3){ background:#28c840; }
+  .codewrap .bar .fname { font-family: var(--mono); font-size: 12px; color: rgba(232,243,234,.62); margin-left: 4px; }
+  .codewrap .bar .spacer { flex: 1; }
+  pre { margin: 0; padding: 18px 20px; overflow-x: auto; font-family: var(--mono); font-size: 13.5px; line-height: 1.7; color: var(--code-ink); }
+  pre code { font-family: inherit; white-space: pre; }
+  /* token colors */
+  .t-key  { color: #8fd0a3; } .t-str  { color: #f0c987; } .t-num  { color: #7fd6e8; }
+  .t-bool { color: #d59bf0; } .t-punc { color: #6f8a7c; } .t-cmt  { color: #5e7a6c; font-style: italic; }
+  .t-cmd  { color: #8fd0a3; } .t-flag { color: #f0c987; } .t-url  { color: #7fd6e8; }
+
+  .copybtn {
+    appearance: none; cursor: pointer; font: inherit; font-size: 12px; font-weight: 600;
+    display: inline-flex; align-items: center; gap: 6px;
+    background: rgba(255,255,255,.08); color: rgba(232,243,234,.85);
+    border: 1px solid rgba(255,255,255,.12); border-radius: 8px; padding: 5px 11px; transition: all .15s;
+  }
+  .copybtn:hover { background: rgba(255,255,255,.16); color: #fff; }
+  .copybtn.ok { background: rgba(47,158,70,.22); border-color: rgba(47,158,70,.4); color: #bff0c8; }
+  .copybtn svg { width: 14px; height: 14px; }
+
+  /* ---------- Tabs ---------- */
+  .tabs { display: flex; gap: 4px; padding: 5px; background: rgba(255,255,255,.05); border-bottom: 1px solid rgba(255,255,255,.07); }
+  .tabs button {
+    appearance: none; cursor: pointer; font: inherit; font-size: 13px; font-weight: 600;
+    color: rgba(232,243,234,.6); background: transparent; border: none; border-radius: 8px; padding: 7px 14px; transition: all .15s;
+  }
+  .tabs button:hover { color: #fff; }
+  .tabs button.active { background: rgba(47,158,70,.18); color: #d6f5dd; }
+  .tabpane { display: none; } .tabpane.active { display: block; }
+
+  /* ---------- Request builder ---------- */
+  /* minmax(0,1fr) is load-bearing: without it the unbreakable JSON line in the
+     live preview blows out the grid track and squeezes the form column. */
+  .builder { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); gap: 0; }
+  @media (max-width: 860px){ .builder { grid-template-columns: 1fr; } }
+  .builder .form { padding: clamp(18px,3vw,26px); border-right: 1px solid var(--line); }
+  @media (max-width: 860px){ .builder .form { border-right: none; border-bottom: 1px solid var(--line); } }
+  .builder .preview { background: var(--code-bg); position: relative; min-height: 100%; }
+
+  .seg { display: inline-flex; background: var(--cream); border: 1px solid var(--line-strong); border-radius: 10px; padding: 3px; gap: 3px; margin-bottom: 4px; }
+  .seg button {
+    appearance:none; cursor:pointer; font:inherit; font-size:13px; font-weight:600; color: var(--ink-soft);
+    background: transparent; border: none; border-radius: 7px; padding: 7px 14px; transition: all .15s; white-space: nowrap;
+  }
+  .seg button.active { background: var(--green); color: #fff; box-shadow: var(--shadow-sm); }
+
+  .field { margin-top: 16px; }
+  .field > label { display: block; font-size: 13px; font-weight: 700; color: var(--ink); margin-bottom: 6px; }
+  .field .hint { font-weight: 500; color: var(--ink-faint); font-size: 12px; margin-left: 6px; }
+  .req-star { color: var(--leaf); font-weight: 800; }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  @media (max-width: 480px){ .grid2 { grid-template-columns: 1fr; } }
+  /* Reserve a uniform two-line label height so inputs in a paired row stay
+     aligned even when one label's hint wraps and the other's doesn't. */
+  .grid2 > .field > label { min-height: 2.7em; line-height: 1.35; }
+  @media (max-width: 480px){ .grid2 > .field > label { min-height: 0; } }
+  input[type=text], input[type=number], select, textarea {
+    width: 100%; font: inherit; font-size: 14px; color: var(--ink);
+    background: var(--white); border: 1px solid var(--line-strong); border-radius: var(--radius-sm);
+    padding: 10px 12px; transition: border-color .15s, box-shadow .15s;
+  }
+  textarea { resize: vertical; min-height: 64px; }
+  input:focus, select:focus, textarea:focus { outline: none; border-color: var(--leaf); box-shadow: 0 0 0 3px rgba(47,158,70,.18); }
+  input::placeholder, textarea::placeholder { color: #aab8af; }
+  .inline-money { display: grid; grid-template-columns: 1fr 92px; gap: 8px; }
+
+  .preview .phead {
+    display: flex; align-items: center; gap: 8px; padding: 11px 14px;
+    background: rgba(255,255,255,.04); border-bottom: 1px solid rgba(255,255,255,.07);
+  }
+  .preview .phead .fname { font-family: var(--mono); font-size: 12px; color: rgba(232,243,234,.62); }
+  .preview .phead .spacer { flex: 1; }
+  .preview pre { font-size: 13px; }
+
+  /* ---------- Annotated response ---------- */
+  .ann { display: grid; grid-template-columns: 1fr; gap: 0; }
+  .ann-row { display: grid; grid-template-columns: 230px minmax(0,1fr); gap: 0; border-top: 1px solid var(--line); }
+  .ann-row:first-child { border-top: none; }
+  @media (max-width: 680px){ .ann-row { grid-template-columns: 1fr; } }
+  .ann-row .k { padding: 16px 20px; background: var(--cream); border-right: 1px solid var(--line); min-width: 0; }
+  @media (max-width: 680px){ .ann-row .k { border-right: none; border-bottom: 1px solid var(--line); padding-bottom: 10px; } }
+  .ann-row .k code { font-family: var(--mono); font-size: 12.5px; font-weight: 700; color: var(--green-dark); overflow-wrap: anywhere; }
+  .ann-row .k .ty { display:block; font-size: 11.5px; color: var(--ink-faint); margin-top: 4px; font-family: var(--mono); }
+  .ann-row .v { padding: 16px 20px; color: var(--ink-soft); font-size: 14.5px; }
+  .ann-row .v b { color: var(--ink); }
+
+  /* ---------- Tables ---------- */
+  table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  thead th { text-align: left; font-size: 11.5px; letter-spacing: .06em; text-transform: uppercase; color: var(--ink-faint); padding: 12px 18px; border-bottom: 1px solid var(--line); background: var(--cream); }
+  tbody td { padding: 13px 18px; border-bottom: 1px solid var(--line); color: var(--ink-soft); vertical-align: top; }
+  tbody tr:last-child td { border-bottom: none; }
+  tbody td:first-child code { font-family: var(--mono); font-size: 13px; font-weight: 700; color: var(--green-dark); }
+  .ty-tag { font-family: var(--mono); font-size: 12px; color: var(--ink-faint); }
+  .tag-req { display:inline-block; font-size: 11px; font-weight: 700; color: var(--leaf); background: rgba(47,158,70,.12); padding: 2px 8px; border-radius: 6px; }
+  .tag-opt { display:inline-block; font-size: 11px; font-weight: 700; color: var(--ink-faint); background: var(--cream); border:1px solid var(--line-strong); padding: 2px 8px; border-radius: 6px; }
+
+  /* ---------- Callouts ---------- */
+  .note { display: flex; gap: 13px; padding: 16px 18px; border-radius: var(--radius-sm); margin-top: 20px; font-size: 14px; }
+  .note svg { width: 20px; height: 20px; flex: none; margin-top: 1px; }
+  .note.tip { background: rgba(47,158,70,.09); border: 1px solid rgba(47,158,70,.22); color: var(--green-dark); }
+  .note.warn { background: var(--amber-bg); border: 1px solid var(--amber-line); color: var(--amber); }
+  .note b { font-weight: 700; }
+  .note code { font-family: var(--mono); font-size: 12.5px; background: rgba(8,69,48,.07); padding: 1px 6px; border-radius: 5px; }
+
+  /* ---------- Step footer nav ---------- */
+  .stepnav { display: flex; justify-content: space-between; gap: 12px; margin-top: 26px; }
+  .stepnav a {
+    display: inline-flex; align-items: center; gap: 9px; font-weight: 700; font-size: 14px;
+    padding: 11px 18px; border-radius: var(--radius-sm); background: var(--white);
+    border: 1px solid var(--line-strong); box-shadow: var(--shadow-sm); transition: all .15s;
+  }
+  .stepnav a:hover { text-decoration: none; transform: translateY(-1px); box-shadow: var(--shadow-md); border-color: var(--leaf); }
+  .stepnav a.primary { background: var(--green); color: #fff; border-color: var(--green); margin-left: auto; }
+  .stepnav a.primary:hover { background: var(--green-dark); }
+  .stepnav svg { width: 16px; height: 16px; }
+
+  footer.foot { border-top: 1px solid var(--line); padding: 36px 0; color: var(--ink-faint); font-size: 13.5px; display:flex; flex-wrap:wrap; gap: 14px; align-items:center; }
+  footer.foot .spacer { flex: 1; }
+
+  /* ---------- Toast ---------- */
+  #toast {
+    position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(20px);
+    background: var(--green-deep); color: #fff; font-weight: 600; font-size: 13.5px;
+    padding: 11px 18px; border-radius: 10px; box-shadow: var(--shadow-lg);
+    opacity: 0; pointer-events: none; transition: all .25s cubic-bezier(.2,.8,.2,1); z-index: 100;
+    display: flex; align-items: center; gap: 9px;
+  }
+  #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  #toast svg { width: 16px; height: 16px; color: var(--leaf); }
+
+  @media (prefers-reduced-motion: reduce){ * { scroll-behavior: auto !important; transition: none !important; } }
+</style>
+</head>
+<body>
+
+<!-- ============================ TOP BAR ============================ -->
+<header class="topbar">
+  <div class="brand">
+    <span class="mark">Z</span>
+    <span>Zakk API<small>Developer Documentation</small></span>
+  </div>
+  <span class="spacer"></span>
+  <span class="pill"><span class="verb">POST</span><span class="path">/api/hscodes/estimate-landed-cost</span></span>
+</header>
+
+<div class="wrap">
+  <!-- ============================ HERO ============================ -->
+  <div class="hero">
+    <h1>Estimate Landed Cost</h1>
+    <p class="lede">
+      Get duty, VAT, excise and the all-in landed cost for any item — from a plain description
+      (Zakk classifies it with AI) or a known HS code. Price a single product or a whole shipment
+      in one call. This guide walks you through it end to end.
+    </p>
+  </div>
+
+  <!-- ============================ SHELL ============================ -->
+  <div class="shell">
+
+    <!-- ---------- Sidebar ---------- -->
+    <nav class="sidenav" aria-label="Steps">
+      <div class="label">Steps</div>
+      <ol>
+        <li><a href="#auth"     data-step><span class="num">1</span> Authenticate</a></li>
+        <li><a href="#compose"  data-step><span class="num">2</span> Compose a request</a></li>
+        <li><a href="#call"     data-step><span class="num">3</span> Make the call</a></li>
+        <li><a href="#response" data-step><span class="num">4</span> Read the response</a></li>
+        <li><a href="#reference" data-step><span class="num">5</span> Field reference</a></li>
+      </ol>
+    </nav>
+
+    <!-- ---------- Content ---------- -->
+    <main>
+
+      <!-- ============ STEP 1 — AUTH ============ -->
+      <section class="step" id="auth">
+        <div class="step-head"><span class="badge">STEP 1</span><h2>Get an access token</h2></div>
+        <p>
+          Every call needs a bearer token. Exchange your Zakk username and password for one using the
+          OAuth&nbsp;2.0 <em>password grant</em> at <code style="font-family:var(--mono);font-size:13px;background:rgba(8,69,48,.06);padding:1px 6px;border-radius:5px">POST /api/auth/token</code>.
+          The token is valid for <b>~15&nbsp;minutes</b> — refresh it with the returned <code style="font-family:var(--mono);font-size:13px;background:rgba(8,69,48,.06);padding:1px 6px;border-radius:5px">refresh_token</code> when it expires.
+        </p>
+
+        <div class="card codewrap" style="margin-top:20px">
+          <div class="bar">
+            <div class="lights"><i></i><i></i><i></i></div>
+            <span class="fname">authenticate.sh</span>
+            <span class="spacer"></span>
+            <button class="copybtn" data-copy="auth"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 012-2h10" stroke-linecap="round"/></svg> Copy</button>
+          </div>
+          <pre id="code-auth"><code><span class="t-cmd">curl</span> <span class="t-flag">-s</span> <span class="t-flag">-X</span> POST <span class="t-url">https://zakk.app/api/auth/token</span> \
+  <span class="t-flag">-H</span> <span class="t-str">"Content-Type: application/x-www-form-urlencoded"</span> \
+  <span class="t-flag">-d</span> <span class="t-str">"grant_type=password"</span> \
+  <span class="t-flag">-d</span> <span class="t-str">"username=$ZAKK_USERNAME"</span> \
+  <span class="t-flag">-d</span> <span class="t-str">"password=$ZAKK_PASSWORD"</span></code></pre>
+        </div>
+
+        <div class="card codewrap" style="margin-top:16px">
+          <div class="bar">
+            <div class="lights"><i></i><i></i><i></i></div>
+            <span class="fname">200 OK · response</span>
+            <span class="spacer"></span>
+          </div>
+          <pre><code><span class="t-punc">{</span>
+  <span class="t-key">"access_token"</span><span class="t-punc">:</span> <span class="t-str">"eyJhbGciOiJIUzI1NiIs…"</span><span class="t-punc">,</span>   <span class="t-cmt">// use this as the Bearer token</span>
+  <span class="t-key">"refresh_token"</span><span class="t-punc">:</span> <span class="t-str">"def50200a1b2…"</span><span class="t-punc">,</span>
+  <span class="t-key">"token_type"</span><span class="t-punc">:</span> <span class="t-str">"Bearer"</span><span class="t-punc">,</span>
+  <span class="t-key">"expires_in"</span><span class="t-punc">:</span> <span class="t-num">900</span><span class="t-punc">,</span>
+  <span class="t-key">"is_email_verified"</span><span class="t-punc">:</span> <span class="t-bool">true</span>
+<span class="t-punc">}</span></code></pre>
+        </div>
+
+        <div class="note tip">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 16v-4M12 8h.01" stroke-linecap="round"/></svg>
+          <div><b>Base URLs.</b> Production is <code>https://zakk.app</code>. Staging (if enabled for your account) is <code>https://dev.zakk.app</code>. Send <code>access_token</code> on every request as <code>Authorization: Bearer &lt;token&gt;</code>.</div>
+        </div>
+
+        <div class="stepnav">
+          <a href="#compose" class="primary">Next: Compose a request
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 12h14M13 6l6 6-6 6" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
+        </div>
+      </section>
+
+      <!-- ============ STEP 2 — COMPOSE ============ -->
+      <section class="step" id="compose">
+        <div class="step-head"><span class="badge">STEP 2</span><h2>Compose your request</h2></div>
+        <p>
+          The body is always a <code style="font-family:var(--mono);font-size:13px;background:rgba(8,69,48,.06);padding:1px 6px;border-radius:5px">{ "lines": [ … ] }</code> array — one element per item.
+          For each line, give Zakk <b>either</b> an item description (it classifies for you) <b>or</b> a known HS code,
+          plus a destination. Add a customs value and measurements to get a full landed-cost figure.
+          Fill the form below and watch the request build itself.
+        </p>
+
+        <div class="card builder">
+          <!-- form -->
+          <div class="form">
+            <div class="field">
+              <label>How do you want to identify the item? <span class="req-star">*</span></label>
+              <div class="seg" id="mode-seg" role="tablist">
+                <button class="active" data-mode="desc" role="tab">Describe it (AI)</button>
+                <button data-mode="hs" role="tab">I know the HS code</button>
+              </div>
+            </div>
+
+            <div class="field" id="f-desc">
+              <label for="i-desc">Item description</label>
+              <textarea id="i-desc" placeholder="e.g. Cotton t-shirts, men's, short sleeve">Cotton t-shirts, men's, short sleeve</textarea>
+            </div>
+
+            <div class="field" id="f-hs" style="display:none">
+              <label for="i-hs">HS code</label>
+              <input type="text" id="i-hs" placeholder="e.g. 61091000" value="61091000" />
+            </div>
+
+            <div class="grid2">
+              <div class="field">
+                <label for="i-dest">Destination <span class="req-star">*</span></label>
+                <select id="i-dest">
+                  <option value="FO">FO — Faroe Islands</option>
+                  <option value="NO">NO — Norway</option>
+                  <option value="GB">GB — United Kingdom</option>
+                  <option value="CA">CA — Canada</option>
+                  <option value="US">US — United States</option>
+                </select>
+              </div>
+              <div class="field">
+                <label for="i-origin">Origin <span class="hint">unlocks preferential rates</span></label>
+                <input type="text" id="i-origin" placeholder="e.g. CN" value="CN" />
+              </div>
+            </div>
+
+            <div class="field">
+              <label>Customs value <span class="hint">required for landed cost</span></label>
+              <div class="inline-money">
+                <input type="number" id="i-value" placeholder="1500" value="1500" min="0" step="0.01" />
+                <input type="text" id="i-currency" placeholder="DKK" value="DKK" />
+              </div>
+            </div>
+
+            <div class="grid2">
+              <div class="field">
+                <label for="i-qty">Quantity <span class="hint">units</span></label>
+                <input type="number" id="i-qty" placeholder="100" value="100" min="0" step="any" />
+              </div>
+              <div class="field">
+                <label for="i-weight">Weight <span class="hint">kg</span></label>
+                <input type="number" id="i-weight" placeholder="25" value="25" min="0" step="any" />
+              </div>
+            </div>
+
+            <div class="grid2">
+              <div class="field">
+                <label for="i-freight">Freight cost <span class="hint">optional</span></label>
+                <input type="number" id="i-freight" placeholder="120" value="120" min="0" step="0.01" />
+              </div>
+              <div class="field">
+                <label for="i-ref">Reference <span class="hint">your own id</span></label>
+                <input type="text" id="i-ref" placeholder="PO-1001" value="PO-1001" />
+              </div>
+            </div>
+
+          </div>
+
+          <!-- live preview -->
+          <div class="preview">
+            <div class="phead">
+              <span class="fname">request body · live</span>
+              <span class="spacer"></span>
+              <button class="copybtn" data-copy="body"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 012-2h10" stroke-linecap="round"/></svg> Copy JSON</button>
+            </div>
+            <pre><code id="code-body"></code></pre>
+          </div>
+        </div>
+
+        <div class="note tip">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 16v-4M12 8h.01" stroke-linecap="round"/></svg>
+          <div><b>Empty fields are dropped.</b> Send only what you have. With no <code>value</code> you get a rates-only answer; add <code>value</code> + the right measurement (<code>quantity</code> / <code>weightKg</code>) for a full landed cost. To price a shipment, push more objects into <code>lines</code> — up to 100.</div>
+        </div>
+
+        <div class="stepnav">
+          <a href="#auth"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M19 12H5M11 6l-6 6 6 6" stroke-linecap="round" stroke-linejoin="round"/></svg> Back</a>
+          <a href="#call" class="primary">Next: Make the call
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 12h14M13 6l6 6-6 6" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
+        </div>
+      </section>
+
+      <!-- ============ STEP 3 — CALL ============ -->
+      <section class="step" id="call">
+        <div class="step-head"><span class="badge">STEP 3</span><h2>Make the call</h2></div>
+        <p>Same request, three ways. The snippets stay in sync with the body you built in Step&nbsp;2.</p>
+
+        <div class="card codewrap" style="margin-top:20px">
+          <div class="tabs" role="tablist">
+            <button class="active" data-tab="curl">cURL</button>
+            <button data-tab="js">JavaScript</button>
+            <button data-tab="py">Python</button>
+            <span style="flex:1"></span>
+            <button class="copybtn" data-copy="snippet" style="margin:3px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 012-2h10" stroke-linecap="round"/></svg> Copy</button>
+          </div>
+          <div class="tabpane active" data-pane="curl"><pre><code id="code-curl"></code></pre></div>
+          <div class="tabpane" data-pane="js"><pre><code id="code-js"></code></pre></div>
+          <div class="tabpane" data-pane="py"><pre><code id="code-py"></code></pre></div>
+        </div>
+
+        <div class="stepnav">
+          <a href="#compose"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M19 12H5M11 6l-6 6 6 6" stroke-linecap="round" stroke-linejoin="round"/></svg> Back</a>
+          <a href="#response" class="primary">Next: Read the response
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 12h14M13 6l6 6-6 6" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
+        </div>
+      </section>
+
+      <!-- ============ STEP 4 — RESPONSE ============ -->
+      <section class="step" id="response">
+        <div class="step-head"><span class="badge">STEP 4</span><h2>Read the response</h2></div>
+        <p>
+          You get a batch envelope: <code style="font-family:var(--mono);font-size:13px;background:rgba(8,69,48,.06);padding:1px 6px;border-radius:5px">lineCount</code>, <code style="font-family:var(--mono);font-size:13px;background:rgba(8,69,48,.06);padding:1px 6px;border-radius:5px">successCount</code>, <code style="font-family:var(--mono);font-size:13px;background:rgba(8,69,48,.06);padding:1px 6px;border-radius:5px">errorCount</code>,
+          then a <code style="font-family:var(--mono);font-size:13px;background:rgba(8,69,48,.06);padding:1px 6px;border-radius:5px">lines</code> array that mirrors your input order. Each line carries its own <code style="font-family:var(--mono);font-size:13px;background:rgba(8,69,48,.06);padding:1px 6px;border-radius:5px">status</code> and either a
+          <code style="font-family:var(--mono);font-size:13px;background:rgba(8,69,48,.06);padding:1px 6px;border-radius:5px">result</code> or an error.
+        </p>
+
+        <div class="card codewrap" style="margin-top:20px">
+          <div class="bar">
+            <div class="lights"><i></i><i></i><i></i></div>
+            <span class="fname">200 OK · response (abridged)</span>
+          </div>
+          <pre><code><span class="t-punc">{</span>
+  <span class="t-key">"lineCount"</span><span class="t-punc">:</span> <span class="t-num">1</span><span class="t-punc">,</span> <span class="t-key">"successCount"</span><span class="t-punc">:</span> <span class="t-num">1</span><span class="t-punc">,</span> <span class="t-key">"errorCount"</span><span class="t-punc">:</span> <span class="t-num">0</span><span class="t-punc">,</span>
+  <span class="t-key">"lines"</span><span class="t-punc">:</span> <span class="t-punc">[{</span>
+    <span class="t-key">"index"</span><span class="t-punc">:</span> <span class="t-num">0</span><span class="t-punc">,</span> <span class="t-key">"reference"</span><span class="t-punc">:</span> <span class="t-str">"PO-1001"</span><span class="t-punc">,</span> <span class="t-key">"status"</span><span class="t-punc">:</span> <span class="t-str">"ok"</span><span class="t-punc">,</span>
+    <span class="t-key">"result"</span><span class="t-punc">:</span> <span class="t-punc">{</span>
+      <span class="t-key">"authority"</span><span class="t-punc">:</span> <span class="t-str">"FO"</span><span class="t-punc">,</span> <span class="t-key">"isClassified"</span><span class="t-punc">:</span> <span class="t-bool">false</span><span class="t-punc">,</span>
+      <span class="t-key">"estimates"</span><span class="t-punc">:</span> <span class="t-punc">[{</span>
+        <span class="t-key">"hsCode"</span><span class="t-punc">:</span> <span class="t-str">"61091000"</span><span class="t-punc">,</span> <span class="t-key">"confidence"</span><span class="t-punc">:</span> <span class="t-num">99</span><span class="t-punc">,</span> <span class="t-key">"qualityState"</span><span class="t-punc">:</span> <span class="t-str">"Verified"</span><span class="t-punc">,</span>
+        <span class="t-key">"isPreferential"</span><span class="t-punc">:</span> <span class="t-bool">false</span><span class="t-punc">,</span>
+        <span class="t-key">"landedCost"</span><span class="t-punc">:</span> <span class="t-punc">{</span>
+          <span class="t-key">"customsValue"</span><span class="t-punc">:</span> <span class="t-num">1500</span><span class="t-punc">,</span>
+          <span class="t-key">"dutyAmount"</span><span class="t-punc">:</span> <span class="t-num">0</span><span class="t-punc">,</span>
+          <span class="t-key">"vatAmount"</span><span class="t-punc">:</span> <span class="t-num">405</span><span class="t-punc">,</span>
+          <span class="t-key">"exciseAmount"</span><span class="t-punc">:</span> <span class="t-num">0</span><span class="t-punc">,</span>
+          <span class="t-key">"freightCost"</span><span class="t-punc">:</span> <span class="t-num">120</span><span class="t-punc">,</span> <span class="t-key">"includesFreight"</span><span class="t-punc">:</span> <span class="t-bool">true</span><span class="t-punc">,</span>
+          <span class="t-key">"totalLandedCost"</span><span class="t-punc">:</span> <span class="t-num">2025</span>
+        <span class="t-punc">}</span><span class="t-punc">,</span>
+        <span class="t-key">"landedCostDecision"</span><span class="t-punc">:</span> <span class="t-punc">{</span> <span class="t-key">"outcome"</span><span class="t-punc">:</span> <span class="t-str">"calculated"</span><span class="t-punc">,</span> <span class="t-cmt">/* components, … */</span> <span class="t-punc">}</span><span class="t-punc">,</span>
+        <span class="t-key">"warnings"</span><span class="t-punc">:</span> <span class="t-punc">[]</span>
+      <span class="t-punc">}]</span>
+    <span class="t-punc">}</span>
+  <span class="t-punc">}]</span>
+<span class="t-punc">}</span></code></pre>
+        </div>
+
+        <div class="card" style="margin-top:16px">
+          <div class="ann">
+            <div class="ann-row"><div class="k"><code>landedCost.totalLandedCost</code><span class="ty">decimal</span></div><div class="v">The headline number: <b>customs value + duty + excise + VAT (+ freight)</b>, all in the destination authority's settlement currency. This is what you quote.</div></div>
+            <div class="ann-row"><div class="k"><code>dutyAmount</code><span class="ty">decimal | null</span></div><div class="v"><b>0</b> means a genuine 0% / exempt duty. <b>null</b> means the rate couldn't be verified — duty is then excluded from the total, so it reads as a "from" lower bound. Check <code>landedCostDecision.outcome</code> for <code>"partial"</code>.</div></div>
+            <div class="ann-row"><div class="k"><code>isPreferential</code><span class="ty">boolean</span></div><div class="v"><b>true</b> when an <code>originCountry</code> you supplied qualified for a preferential rate. When that beats the MFN rate, <code>savings</code> shows the difference.</div></div>
+            <div class="ann-row"><div class="k"><code>qualityState</code><span class="ty">string</span></div><div class="v"><code>Verified</code>, <code>Adapted</code>, <code>NotFound</code>… Tells you how trustworthy the matched tariff line is. Pair it with <code>warnings</code>.</div></div>
+            <div class="ann-row"><div class="k"><code>landedCostDecision.outcome</code><span class="ty">string</span></div><div class="v"><code>calculated</code> (complete), <code>partial</code> (a rate was unknown or a measurement was missing), <code>blocked</code> (need more input), or <code>unsupported</code> (no tariff coverage). Drives the badge in the Zakk UI.</div></div>
+            <div class="ann-row"><div class="k"><code>warnings[]</code><span class="ty">{ code, message }</span></div><div class="v">Machine-readable nudges — e.g. <code>MissingAlcoholVolumePercent</code>, <code>CodeAdapted</code>. Branch on <code>code</code>; show <code>message</code> to humans.</div></div>
+          </div>
+        </div>
+
+        <div class="note warn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 9v4M12 17h.01M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <div><b>Per-line errors are isolated.</b> A line that can't be priced comes back with <code>"status":"error"</code>, the <code>errorStatusCode</code> a single-line request would have returned, a stable <code>errorCode</code> (e.g. <code>no_valid_codes_for_authority</code>), and a human-readable <code>error</code>. The rest of the batch still succeeds. Aggregate authorities (<code>EU</code>, <code>BASE</code>) aren't supported and return a per-line error.</div>
+        </div>
+
+        <div class="stepnav">
+          <a href="#call"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M19 12H5M11 6l-6 6 6 6" stroke-linecap="round" stroke-linejoin="round"/></svg> Back</a>
+          <a href="#reference" class="primary">Next: Field reference
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 12h14M13 6l6 6-6 6" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
+        </div>
+      </section>
+
+      <!-- ============ STEP 5 — REFERENCE ============ -->
+      <section class="step" id="reference">
+        <div class="step-head"><span class="badge">STEP 5</span><h2>Field reference</h2></div>
+        <p>Every field a line accepts. Provide <b>either</b> <code style="font-family:var(--mono);font-size:13px;background:rgba(8,69,48,.06);padding:1px 6px;border-radius:5px">itemDescription</code> <b>or</b> <code style="font-family:var(--mono);font-size:13px;background:rgba(8,69,48,.06);padding:1px 6px;border-radius:5px">hsCode</code>, never both.</p>
+
+        <div class="card" style="margin-top:20px">
+          <table>
+            <thead><tr><th>Field</th><th>Type</th><th></th><th>Notes</th></tr></thead>
+            <tbody>
+              <tr><td><code>destinationCountry</code></td><td class="ty-tag">string</td><td><span class="tag-req">required</span></td><td>ISO 3166-1 alpha-2. Supported: <b>FO, NO, GB, CA, US</b>. <code>EU</code>/<code>BASE</code> rejected per line.</td></tr>
+              <tr><td><code>itemDescription</code></td><td class="ty-tag">string</td><td><span class="tag-opt">either/or</span></td><td>Free text. Triggers AI classification — may return several ranked <code>estimates</code>.</td></tr>
+              <tr><td><code>hsCode</code></td><td class="ty-tag">string</td><td><span class="tag-opt">either/or</span></td><td>Direct tariff lookup. Dots/spaces/dashes are stripped. Digit length depends on the authority (FO/NO = 8, GB/CA/US = 10).</td></tr>
+              <tr><td><code>value</code></td><td class="ty-tag">decimal</td><td><span class="tag-opt">optional</span></td><td>Customs value. Required to compute a landed cost; omit for a rates-only answer.</td></tr>
+              <tr><td><code>currency</code></td><td class="ty-tag">string</td><td><span class="tag-opt">optional</span></td><td>ISO-4217 of <code>value</code> &amp; <code>freightCost</code>. Converted to the authority's settlement currency where applicable.</td></tr>
+              <tr><td><code>quantity</code></td><td class="ty-tag">decimal</td><td><span class="tag-opt">optional</span></td><td>Units. Needed for per-unit duties and per-volume alcohol excise.</td></tr>
+              <tr><td><code>weightKg</code></td><td class="ty-tag">decimal</td><td><span class="tag-opt">optional</span></td><td>Net weight in kg. Needed for weight-based duties.</td></tr>
+              <tr><td><code>originCountry</code></td><td class="ty-tag">string</td><td><span class="tag-opt">optional</span></td><td>ISO alpha-2. Unlocks preferential rates + <code>savings</code> when a trade agreement covers it.</td></tr>
+              <tr><td><code>freightCost</code></td><td class="ty-tag">decimal</td><td><span class="tag-opt">optional</span></td><td>Added to the VAT base when present; surfaced as <code>includesFreight: true</code>.</td></tr>
+              <tr><td><code>alcoholVolumePercent</code></td><td class="ty-tag">decimal</td><td><span class="tag-opt">optional</span></td><td>0–100. Required for per-vol% alcohol excise (e.g. Norwegian spirits/wine). Omit → excise stays 0 + a warning.</td></tr>
+              <tr><td><code>supplementaryQuantity</code></td><td class="ty-tag">decimal</td><td><span class="tag-opt">optional</span></td><td>Volume in litres/HL for GB-style specific excise charged per unit of volume.</td></tr>
+              <tr><td><code>reference</code></td><td class="ty-tag">string</td><td><span class="tag-opt">optional</span></td><td>Your own id (SKU, PO line). Echoed back verbatim so you can stitch results to your rows.</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="note tip">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2 4 6v6c0 5 3.5 8 8 10 4.5-2 8-5 8-10V6l-8-4z" stroke-linejoin="round"/><path d="M9 12l2 2 4-4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <div><b>Discover supported destinations at runtime.</b> Call <code>GET /api/hscodes/destinations</code> and check each entry's <code>hasLandedCostSupport: true</code> flag rather than hard-coding the list. The legacy route <code>POST /api/hscodes/resolve-tariff</code> is a name alias that takes the same <code>lines</code> body.</div>
+        </div>
+
+        <div class="stepnav">
+          <a href="#response"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M19 12H5M11 6l-6 6 6 6" stroke-linecap="round" stroke-linejoin="round"/></svg> Back</a>
+          <a href="#auth" class="primary">Back to top
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M12 19V5M6 11l6-6 6 6" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <footer class="foot">
+    <span class="brand" style="font-size:14px"><span class="mark" style="width:24px;height:24px;font-size:13px;border-radius:7px">Z</span> Zakk Customs</span>
+    <span class="spacer"></span>
+    <span>Customs invoice processing for the Faroe Islands</span>
+  </footer>
+</div>
+
+<div id="toast"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 13l4 4L19 7" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Copied to clipboard</span></div>
+
+<script>
+/* ============================================================
+   Estimate Landed Cost — interactive guide logic
+   Pure vanilla JS, no dependencies.
+   ============================================================ */
+(function () {
+  "use strict";
+
+  var BASE = "https://zakk.app";
+  var ENDPOINT = "/api/hscodes/estimate-landed-cost";
+
+  /* ---------- tiny helpers ---------- */
+  function $(sel, root) { return (root || document).querySelector(sel); }
+  function $all(sel, root) { return Array.prototype.slice.call((root || document).querySelectorAll(sel)); }
+  function esc(s) { return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"); }
+
+  var state = { mode: "desc" };
+
+  /* ---------- read the form into a JS line object ---------- */
+  function num(id) {
+    var raw = $("#" + id).value.trim();
+    if (raw === "") return undefined;
+    var n = Number(raw);
+    return isNaN(n) ? undefined : n;
+  }
+  function str(id) {
+    var raw = $("#" + id).value.trim();
+    return raw === "" ? undefined : raw;
+  }
+
+  function buildLine() {
+    var line = {};
+    if (str("i-ref")) line.reference = str("i-ref");
+    if (state.mode === "desc") {
+      if (str("i-desc")) line.itemDescription = str("i-desc");
+    } else {
+      if (str("i-hs")) line.hsCode = str("i-hs");
+    }
+    var dest = str("i-dest"); if (dest) line.destinationCountry = dest;
+    if (str("i-origin")) line.originCountry = str("i-origin").toUpperCase();
+    if (num("i-qty") !== undefined) line.quantity = num("i-qty");
+    if (num("i-weight") !== undefined) line.weightKg = num("i-weight");
+    if (num("i-value") !== undefined) line.value = num("i-value");
+    if (str("i-currency")) line.currency = str("i-currency").toUpperCase();
+    if (num("i-freight") !== undefined) line.freightCost = num("i-freight");
+    return line;
+  }
+
+  function buildBody() { return { lines: [ buildLine() ] }; }
+
+  /* ---------- JSON → syntax-highlighted HTML ---------- */
+  function highlightJson(obj) {
+    var json = JSON.stringify(obj, null, 2);
+    var out = "";
+    var i = 0, n = json.length;
+    while (i < n) {
+      var ch = json[i];
+      if (ch === '"') {
+        // read string
+        var j = i + 1, buf = '"';
+        while (j < n) { buf += json[j]; if (json[j] === '"' && json[j-1] !== "\\") { j++; break; } j++; }
+        // key if followed by colon (skipping spaces)
+        var k = j; while (k < n && (json[k] === " ")) k++;
+        var cls = (json[k] === ":") ? "t-key" : "t-str";
+        out += '<span class="' + cls + '">' + esc(buf) + "</span>";
+        i = j;
+      } else if (/[0-9-]/.test(ch) && /[\s:,]/.test(json[i-1] || " ")) {
+        var m = json.slice(i).match(/^-?\d+(\.\d+)?([eE][+-]?\d+)?/);
+        out += '<span class="t-num">' + esc(m[0]) + "</span>"; i += m[0].length;
+      } else if (json.slice(i, i+4) === "true" || json.slice(i, i+5) === "false") {
+        var b = json.slice(i, i+4) === "true" ? "true" : "false";
+        out += '<span class="t-bool">' + b + "</span>"; i += b.length;
+      } else if (json.slice(i, i+4) === "null") {
+        out += '<span class="t-bool">null</span>'; i += 4;
+      } else if (/[{}\[\],:]/.test(ch)) {
+        out += '<span class="t-punc">' + ch + "</span>"; i++;
+      } else { out += esc(ch); i++; }
+    }
+    return out;
+  }
+
+  /* ---------- code snippet generators ---------- */
+  function curlSnippet(body) {
+    var json = JSON.stringify(body, null, 2);
+    var h = "";
+    h += '<span class="t-cmd">curl</span> <span class="t-flag">-X</span> POST <span class="t-url">' + esc(BASE + ENDPOINT) + "</span> \\\n";
+    h += '  <span class="t-flag">-H</span> <span class="t-str">"Authorization: Bearer $TOKEN"</span> \\\n';
+    h += '  <span class="t-flag">-H</span> <span class="t-str">"Content-Type: application/json"</span> \\\n';
+    h += '  <span class="t-flag">-d</span> <span class="t-str">\'' + esc(json) + "'</span>";
+    return h;
+  }
+  function jsSnippet(body) {
+    var json = JSON.stringify(body, null, 2).split("\n").map(function (l, idx) { return idx === 0 ? l : "  " + l; }).join("\n");
+    var h = "";
+    h += '<span class="t-key">const</span> res <span class="t-punc">=</span> <span class="t-key">await</span> <span class="t-cmd">fetch</span>(<span class="t-str">"' + esc(BASE + ENDPOINT) + '"</span>, {\n';
+    h += '  method<span class="t-punc">:</span> <span class="t-str">"POST"</span>,\n';
+    h += '  headers<span class="t-punc">:</span> {\n';
+    h += '    <span class="t-str">"Authorization"</span><span class="t-punc">:</span> <span class="t-str">`Bearer ${token}`</span>,\n';
+    h += '    <span class="t-str">"Content-Type"</span><span class="t-punc">:</span> <span class="t-str">"application/json"</span>\n';
+    h += "  },\n";
+    h += "  body<span class=\"t-punc\">:</span> <span class=\"t-cmd\">JSON</span>.stringify(" + highlightJson(body) + ")\n";
+    h += "});\n";
+    h += '<span class="t-key">const</span> data <span class="t-punc">=</span> <span class="t-key">await</span> res.json();\n';
+    h += '<span class="t-cmt">// data.lines[0].result.estimates[0].landedCost.totalLandedCost</span>';
+    return h;
+  }
+  function pySnippet(body) {
+    var h = "";
+    h += '<span class="t-key">import</span> requests\n\n';
+    h += "res <span class=\"t-punc\">=</span> requests.post(\n";
+    h += '    <span class="t-str">"' + esc(BASE + ENDPOINT) + '"</span>,\n';
+    h += '    headers<span class="t-punc">=</span>{<span class="t-str">"Authorization"</span>: <span class="t-str">f"Bearer {token}"</span>},\n';
+    h += "    json<span class=\"t-punc\">=</span>" + pyDict(body, 1) + ",\n";
+    h += ")\n";
+    h += 'data <span class="t-punc">=</span> res.json()\n';
+    h += '<span class="t-cmt"># data["lines"][0]["result"]["estimates"][0]["landedCost"]</span>';
+    return h;
+  }
+  function pyDict(obj, depth) {
+    // render a Python literal with highlighting, JSON-ish (true→True handled minimally)
+    var pad = new Array(depth * 4 + 1).join(" ");
+    var padEnd = new Array((depth - 1) * 4 + 1).join(" ");
+    if (Array.isArray(obj)) {
+      if (!obj.length) return '<span class="t-punc">[]</span>';
+      var items = obj.map(function (v) { return pad + pyVal(v, depth + 1); });
+      return '<span class="t-punc">[</span>\n' + items.join('<span class="t-punc">,</span>\n') + "\n" + padEnd + '<span class="t-punc">]</span>';
+    }
+    var keys = Object.keys(obj);
+    var rows = keys.map(function (k) {
+      return pad + '<span class="t-str">"' + esc(k) + '"</span><span class="t-punc">:</span> ' + pyVal(obj[k], depth + 1);
+    });
+    return '<span class="t-punc">{</span>\n' + rows.join('<span class="t-punc">,</span>\n') + "\n" + padEnd + '<span class="t-punc">}</span>';
+  }
+  function pyVal(v, depth) {
+    if (v === null) return '<span class="t-bool">None</span>';
+    if (typeof v === "boolean") return '<span class="t-bool">' + (v ? "True" : "False") + "</span>";
+    if (typeof v === "number") return '<span class="t-num">' + v + "</span>";
+    if (typeof v === "string") return '<span class="t-str">"' + esc(v) + '"</span>';
+    return pyDict(v, depth);
+  }
+
+  /* ---------- render everything ---------- */
+  function render() {
+    var body = buildBody();
+    $("#code-body").innerHTML = highlightJson(body);
+    $("#code-curl").innerHTML = curlSnippet(body);
+    $("#code-js").innerHTML = jsSnippet(body);
+    $("#code-py").innerHTML = pySnippet(body);
+    // auto-show ABV field only when relevant-ish (keep visible but de-emphasised otherwise)
+  }
+
+  /* ---------- copy buttons ---------- */
+  var copySources = {
+    auth: function () { return $("#code-auth").innerText; },
+    body: function () { return JSON.stringify(buildBody(), null, 2); },
+    snippet: function () {
+      var active = $(".tabpane.active code");
+      return active ? active.innerText : "";
+    }
+  };
+  function showToast() {
+    var t = $("#toast"); t.classList.add("show");
+    clearTimeout(showToast._t); showToast._t = setTimeout(function () { t.classList.remove("show"); }, 1600);
+  }
+  $all("[data-copy]").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      var key = btn.getAttribute("data-copy");
+      var text = copySources[key] ? copySources[key]() : "";
+      navigator.clipboard.writeText(text).then(function () {
+        var label = btn.innerHTML;
+        btn.classList.add("ok");
+        btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 13l4 4L19 7" stroke-linecap="round" stroke-linejoin="round"/></svg> Copied';
+        showToast();
+        setTimeout(function () { btn.classList.remove("ok"); btn.innerHTML = label; }, 1500);
+      });
+    });
+  });
+
+  /* ---------- mode segmented control ---------- */
+  $all("#mode-seg button").forEach(function (b) {
+    b.addEventListener("click", function () {
+      $all("#mode-seg button").forEach(function (x) { x.classList.remove("active"); });
+      b.classList.add("active");
+      state.mode = b.getAttribute("data-mode");
+      $("#f-desc").style.display = state.mode === "desc" ? "" : "none";
+      $("#f-hs").style.display = state.mode === "hs" ? "" : "none";
+      render();
+    });
+  });
+
+  /* ---------- tabs ---------- */
+  $all(".tabs button[data-tab]").forEach(function (b) {
+    b.addEventListener("click", function () {
+      var pane = b.getAttribute("data-tab");
+      $all(".tabs button[data-tab]").forEach(function (x) { x.classList.remove("active"); });
+      b.classList.add("active");
+      $all(".tabpane").forEach(function (p) { p.classList.toggle("active", p.getAttribute("data-pane") === pane); });
+    });
+  });
+
+  /* ---------- live form binding ---------- */
+  $all(".builder input, .builder select, .builder textarea").forEach(function (el) {
+    el.addEventListener("input", render);
+    el.addEventListener("change", render);
+  });
+
+  /* ---------- scroll-spy for the sidebar ---------- */
+  var navLinks = $all(".sidenav a[data-step]");
+  var sections = navLinks.map(function (a) { return $(a.getAttribute("href")); });
+  function spy() {
+    // Viewport-relative: a section becomes "current" once its top scrolls to
+    // within 140px of the top of the viewport (just below the sticky bar).
+    // getBoundingClientRect avoids offsetParent drift that offsetTop suffers from.
+    var threshold = 140;
+    var activeIdx = 0;
+    sections.forEach(function (s, i) { if (s && s.getBoundingClientRect().top <= threshold) activeIdx = i; });
+    navLinks.forEach(function (a, i) {
+      a.classList.toggle("active", i === activeIdx);
+      a.classList.toggle("done", i < activeIdx);
+    });
+  }
+  window.addEventListener("scroll", spy, { passive: true });
+
+  /* ---------- init ---------- */
+  render();
+  spy();
+})();
+</script>
+</body>
+</html>
