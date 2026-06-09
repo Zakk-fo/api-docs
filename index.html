@@ -317,7 +317,7 @@
         <p>
           Every call needs a bearer token. Exchange your Zakk username and password for one using the
           OAuth&nbsp;2.0 <em>password grant</em> at <code style="font-family:var(--mono);font-size:13px;background:rgba(8,69,48,.06);padding:1px 6px;border-radius:5px">POST /api/auth/token</code>.
-          The token is valid for <b>~15&nbsp;minutes</b> — refresh it with the returned <code style="font-family:var(--mono);font-size:13px;background:rgba(8,69,48,.06);padding:1px 6px;border-radius:5px">refresh_token</code> when it expires.
+          The token is short-lived — check <code style="font-family:var(--mono);font-size:13px;background:rgba(8,69,48,.06);padding:1px 6px;border-radius:5px">expires_in</code> (seconds) and refresh it with the returned <code style="font-family:var(--mono);font-size:13px;background:rgba(8,69,48,.06);padding:1px 6px;border-radius:5px">refresh_token</code> before it expires.
         </p>
 
         <div class="card codewrap" style="margin-top:20px">
@@ -344,7 +344,7 @@
   <span class="t-key">"access_token"</span><span class="t-punc">:</span> <span class="t-str">"eyJhbGciOiJIUzI1NiIs…"</span><span class="t-punc">,</span>   <span class="t-cmt">// use this as the Bearer token</span>
   <span class="t-key">"refresh_token"</span><span class="t-punc">:</span> <span class="t-str">"def50200a1b2…"</span><span class="t-punc">,</span>
   <span class="t-key">"token_type"</span><span class="t-punc">:</span> <span class="t-str">"Bearer"</span><span class="t-punc">,</span>
-  <span class="t-key">"expires_in"</span><span class="t-punc">:</span> <span class="t-num">900</span><span class="t-punc">,</span>
+  <span class="t-key">"expires_in"</span><span class="t-punc">:</span> <span class="t-num">3600</span><span class="t-punc">,</span>
   <span class="t-key">"is_email_verified"</span><span class="t-punc">:</span> <span class="t-bool">true</span>
 <span class="t-punc">}</span></code></pre>
         </div>
@@ -509,15 +509,15 @@
     <span class="t-key">"result"</span><span class="t-punc">:</span> <span class="t-punc">{</span>
       <span class="t-key">"authority"</span><span class="t-punc">:</span> <span class="t-str">"FO"</span><span class="t-punc">,</span> <span class="t-key">"isClassified"</span><span class="t-punc">:</span> <span class="t-bool">false</span><span class="t-punc">,</span>
       <span class="t-key">"estimates"</span><span class="t-punc">:</span> <span class="t-punc">[{</span>
-        <span class="t-key">"hsCode"</span><span class="t-punc">:</span> <span class="t-str">"61091000"</span><span class="t-punc">,</span> <span class="t-key">"confidence"</span><span class="t-punc">:</span> <span class="t-num">99</span><span class="t-punc">,</span> <span class="t-key">"qualityState"</span><span class="t-punc">:</span> <span class="t-str">"Verified"</span><span class="t-punc">,</span>
+        <span class="t-key">"hsCode"</span><span class="t-punc">:</span> <span class="t-str">"61091000"</span><span class="t-punc">,</span> <span class="t-key">"confidence"</span><span class="t-punc">:</span> <span class="t-num">99</span><span class="t-punc">,</span> <span class="t-key">"qualityState"</span><span class="t-punc">:</span> <span class="t-str">"Provided"</span><span class="t-punc">,</span>
         <span class="t-key">"isPreferential"</span><span class="t-punc">:</span> <span class="t-bool">false</span><span class="t-punc">,</span>
         <span class="t-key">"landedCost"</span><span class="t-punc">:</span> <span class="t-punc">{</span>
           <span class="t-key">"customsValue"</span><span class="t-punc">:</span> <span class="t-num">1500</span><span class="t-punc">,</span>
-          <span class="t-key">"dutyAmount"</span><span class="t-punc">:</span> <span class="t-num">0</span><span class="t-punc">,</span>
-          <span class="t-key">"vatAmount"</span><span class="t-punc">:</span> <span class="t-num">405</span><span class="t-punc">,</span>
+          <span class="t-key">"dutyAmount"</span><span class="t-punc">:</span> <span class="t-num">150</span><span class="t-punc">,</span> <span class="t-key">"dutyExpression"</span><span class="t-punc">:</span> <span class="t-str">"10%"</span><span class="t-punc">,</span>
+          <span class="t-key">"vatAmount"</span><span class="t-punc">:</span> <span class="t-num">442.5</span><span class="t-punc">,</span>
           <span class="t-key">"exciseAmount"</span><span class="t-punc">:</span> <span class="t-num">0</span><span class="t-punc">,</span>
           <span class="t-key">"freightCost"</span><span class="t-punc">:</span> <span class="t-num">120</span><span class="t-punc">,</span> <span class="t-key">"includesFreight"</span><span class="t-punc">:</span> <span class="t-bool">true</span><span class="t-punc">,</span>
-          <span class="t-key">"totalLandedCost"</span><span class="t-punc">:</span> <span class="t-num">2025</span>
+          <span class="t-key">"totalLandedCost"</span><span class="t-punc">:</span> <span class="t-num">2212.5</span>
         <span class="t-punc">}</span><span class="t-punc">,</span>
         <span class="t-key">"landedCostDecision"</span><span class="t-punc">:</span> <span class="t-punc">{</span> <span class="t-key">"outcome"</span><span class="t-punc">:</span> <span class="t-str">"calculated"</span><span class="t-punc">,</span> <span class="t-cmt">/* components, … */</span> <span class="t-punc">}</span><span class="t-punc">,</span>
         <span class="t-key">"warnings"</span><span class="t-punc">:</span> <span class="t-punc">[]</span>
